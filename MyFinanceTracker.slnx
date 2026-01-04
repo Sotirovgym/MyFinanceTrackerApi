@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="MyFinanceTracker.Api/MyFinanceTracker.Api.csproj" />
+    <Project Path="MyFinanceTracker.Application/MyFinanceTracker.Application.csproj" />
+    <Project Path="MyFinanceTracker.Core/MyFinanceTracker.Core.csproj" />
+    <Project Path="MyFinanceTracker.Infrastructure/MyFinanceTracker.Infrastructure.csproj" />
+  </Folder>
+</Solution>
