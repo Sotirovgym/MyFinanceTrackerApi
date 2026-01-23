@@ -1,9 +1,12 @@
 using MyFinanceTracker.Api.Extensions;
+using MyFinanceTracker.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Add Swagger services
 builder.Services.AddSwagger();
