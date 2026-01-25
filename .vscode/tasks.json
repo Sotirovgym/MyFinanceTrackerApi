@@ -1,0 +1,78 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "stop-processes",
+      "type": "shell",
+      "command": "Get-Process | Where-Object { $_.ProcessName -eq 'MyFinanceTracker.Api' } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 300",
+      "windows": {
+        "command": "Get-Process | Where-Object { $_.ProcessName -eq 'MyFinanceTracker.Api' } | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 300"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "prebuild-clean",
+      "dependsOn": "stop-processes",
+      "dependsOrder": "sequence",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "${workspaceFolder}/MyFinanceTracker.Api/MyFinanceTracker.Api.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build",
+      "dependsOn": "prebuild-clean",
+      "dependsOrder": "sequence",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/MyFinanceTracker.Api/MyFinanceTracker.Api.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/MyFinanceTracker.Api/MyFinanceTracker.Api.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/MyFinanceTracker.Api/MyFinanceTracker.Api.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "clean",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "${workspaceFolder}/MyFinanceTracker.Api/MyFinanceTracker.Api.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
