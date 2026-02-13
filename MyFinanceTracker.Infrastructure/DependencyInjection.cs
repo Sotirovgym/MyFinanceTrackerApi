@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
+using MyFinanceTracker.Application.Common.Interfaces;
 using MyFinanceTracker.Infrastructure.Data;
 using MyFinanceTracker.Infrastructure.Identity;
+using MyFinanceTracker.Infrastructure.Common.Extensions;
 
 namespace MyFinanceTracker.Infrastructure
 {
@@ -16,28 +16,9 @@ namespace MyFinanceTracker.Infrastructure
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            services.AddIdentity();
 
-            services.Configure<IdentityOptions>(options =>
-            {
-                // Default Lockout settings
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.Lockout.AllowedForNewUsers = true;
-                // Default Password settings
-                options.Password.RequireDigit = true;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequiredUniqueChars = 1;
-                // Default SignIn settings
-                options.SignIn.RequireConfirmedEmail = false;
-                options.SignIn.RequireConfirmedPhoneNumber = false;
-                options.User.RequireUniqueEmail = true;
-            });
+            services.AddScoped<IIdentityService, IdentityService>();
 
             return services;
         }
