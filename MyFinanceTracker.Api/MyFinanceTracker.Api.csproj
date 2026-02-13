@@ -14,10 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\MyFinanceTracker.Application\MyFinanceTracker.Application.csproj" />
     <ProjectReference Include="..\MyFinanceTracker.Infrastructure\MyFinanceTracker.Infrastructure.csproj" />
   </ItemGroup>
 
