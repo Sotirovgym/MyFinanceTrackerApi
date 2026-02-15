@@ -10,6 +10,12 @@ namespace MyFinanceTracker.Infrastructure.Data.Configurations
         {
             builder.Property(e => e.EnableNotifications)
                 .HasDefaultValue(true);
+
+            builder.Property(e => e.FirstName)
+                .HasMaxLength(50);
+
+            builder.Property(e => e.LastName)
+                .HasMaxLength(50);
         }
     }
 }

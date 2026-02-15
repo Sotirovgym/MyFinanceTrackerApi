@@ -1,5 +1,6 @@
 using MyFinanceTracker.Api.Extensions;
 using MyFinanceTracker.Infrastructure;
+using MyFinanceTracker.Infrastructure.Common.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,12 @@ builder.Services.AddSwagger();
 
 var app = builder.Build();
 
+// Seed roles
+if (app.Environment.IsDevelopment())
+{
+    await app.Services.SeedRolesAsync();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -22,8 +29,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
