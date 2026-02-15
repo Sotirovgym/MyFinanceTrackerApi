@@ -18,4 +18,8 @@
     <ProjectReference Include="..\MyFinanceTracker.Infrastructure\MyFinanceTracker.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MyFinanceTracker.Infrastructure\MyFinanceTracker.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
