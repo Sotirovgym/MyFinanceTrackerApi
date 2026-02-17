@@ -1,4 +1,5 @@
-using MyFinanceTracker.Api.Extensions;
+using MyFinanceTracker.Api.Common.Extensions;
+using MyFinanceTracker.Api.Common.Middlewares;
 using MyFinanceTracker.Infrastructure;
 using MyFinanceTracker.Infrastructure.Common.Extensions;
 
@@ -26,6 +27,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Use global exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 

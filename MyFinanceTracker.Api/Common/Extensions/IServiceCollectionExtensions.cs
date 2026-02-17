@@ -1,4 +1,4 @@
-﻿namespace MyFinanceTracker.Api.Extensions
+﻿namespace MyFinanceTracker.Api.Common.Extensions
 {
     public static class IServiceCollectionExtensions
     {
@@ -12,6 +12,10 @@
                     Title = "My Finance Tracker API",
                     Version = "v1"
                 });
+
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MyFinanceTracker.Api.xml"));
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MyFinanceTracker.Application.xml"));
+                options.EnableAnnotations();
             });
             return services;
         }
