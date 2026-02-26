@@ -2,8 +2,16 @@ using MyFinanceTracker.Api.Common.Extensions;
 using MyFinanceTracker.Api.Common.Middlewares;
 using MyFinanceTracker.Infrastructure;
 using MyFinanceTracker.Infrastructure.Common.Extensions;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using MyFinanceTracker.Application.Common.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add validators from the Application assembly
+builder.Services.AddValidatorsFromAssemblyContaining<IIdentityService>(includeInternalTypes: true);
+// Enables automatic validation during model binding
+builder.Services.AddFluentValidationAutoValidation();
 
 // Add services to the container.
 builder.Services.AddControllers();
