@@ -2,6 +2,7 @@
 using MyFinanceTracker.Application.Common.DTOs;
 using MyFinanceTracker.Application.Common.Interfaces;
 using MyFinanceTracker.Application.Features.Authentication.DTOs;
+using MyFinanceTracker.Core.Constants;
 
 namespace MyFinanceTracker.Infrastructure.Identity
 {
@@ -24,7 +25,6 @@ namespace MyFinanceTracker.Infrastructure.Identity
             {  
                 Email = registerRequest.Email,
                 UserName = registerRequest.Email,
-                PasswordHash = registerRequest.Password,
                 EnableNotifications = registerRequest.EnableNotifications
             };
 
@@ -39,7 +39,7 @@ namespace MyFinanceTracker.Infrastructure.Identity
             if (result.Succeeded)
             {
                 // Assign default role
-                await _userManager.AddToRoleAsync(user, "User");
+                await _userManager.AddToRoleAsync(user, RoleNames.User);
             }
 
             return Result<string>.Success("User registered successfully.");

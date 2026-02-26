@@ -54,6 +54,7 @@ namespace MyFinanceTracker.Api.Controllers
         /// <returns>An HTTP response containing the authentication token.</returns>
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerOperation(
             Summary = "Authenticates a user.",
