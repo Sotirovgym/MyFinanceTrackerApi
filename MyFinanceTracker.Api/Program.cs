@@ -1,22 +1,47 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using MyFinanceTracker.Api.Common.Extensions;
 using MyFinanceTracker.Api.Common.Middlewares;
 using MyFinanceTracker.Infrastructure;
 using MyFinanceTracker.Infrastructure.Common.Extensions;
+using MyFinanceTracker.Infrastructure.Options;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using MyFinanceTracker.Application.Common.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add validators from the Application assembly
+// Register validators from the Application assembly
 builder.Services.AddValidatorsFromAssemblyContaining<IIdentityService>(includeInternalTypes: true);
-// Enables automatic validation during model binding
-builder.Services.AddFluentValidationAutoValidation();
 
 // Add services to the container.
 builder.Services.AddControllers();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Configure JWT Bearer authentication
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JWT settings are not configured.");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
 
 // Add Swagger services
 builder.Services.AddSwagger();
