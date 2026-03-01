@@ -1,8 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using MyFinanceTracker.Application.Common.DTOs;
 using MyFinanceTracker.Application.Common.Interfaces;
 using MyFinanceTracker.Application.Features.Authentication.DTOs;
 using MyFinanceTracker.Core.Constants;
+using MyFinanceTracker.Infrastructure.Options;
 
 namespace MyFinanceTracker.Infrastructure.Identity
 {
@@ -10,13 +16,16 @@ namespace MyFinanceTracker.Infrastructure.Identity
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly JwtSettings _jwtSettings;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IOptions<JwtSettings> jwtSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _jwtSettings = jwtSettings.Value;
         }
 
         public async Task<Result<string>> RegisterAsync(RegisterRequest registerRequest)
@@ -45,27 +54,65 @@ namespace MyFinanceTracker.Infrastructure.Identity
             return Result<string>.Success("User registered successfully.");
         }
 
-        public async Task<Result<string>> LoginAsync(LoginRequest loginRequest)
+        public async Task<Result<LoginResponse>> LoginAsync(LoginRequest loginRequest)
         {
             var user = await _userManager.FindByEmailAsync(loginRequest.Email);
 
             if (user is null)
             {
-                return Result<string>.Failure("Invalid credentials.");
+                return Result<LoginResponse>.Failure("Invalid credentials.");
             }
 
-            var result = await _signInManager.PasswordSignInAsync(
+            var signInResult = await _signInManager.PasswordSignInAsync(
                 loginRequest.Email,
-                loginRequest.Password, 
-                isPersistent: false, 
+                loginRequest.Password,
+                isPersistent: false,
                 lockoutOnFailure: false);
 
-            if (!result.Succeeded)
+            if (!signInResult.Succeeded)
             {
-                return Result<string>.Failure("Invalid credentials.");
+                return Result<LoginResponse>.Failure("Invalid credentials.");
             }
 
-            return Result<string>.Success(user.Id);
+            var accessToken = await GenerateAccessTokenAsync(user);
+            var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
+
+            return Result<LoginResponse>.Success(new LoginResponse
+            {
+                AccessToken = accessToken,
+                ExpiresAt = expiresAt
+            });
+        }
+
+        private async Task<string> GenerateAccessTokenAsync(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id),
+                new(ClaimTypes.Email, user.Email ?? string.Empty),
+                new(JwtRegisteredClaimNames.Sub, user.Id),
+                new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
+
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: expires,
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

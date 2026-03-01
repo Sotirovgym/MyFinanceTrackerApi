@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using MyFinanceTracker.Application.Common.Interfaces;
 using MyFinanceTracker.Application.Features.Authentication.DTOs;
 using Swashbuckle.AspNetCore.Annotations;
@@ -13,14 +14,23 @@ namespace MyFinanceTracker.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IIdentityService _identityService;
+        private readonly IValidator<RegisterRequest> _registerValidator;
+        private readonly IValidator<LoginRequest> _loginValidator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
         /// </summary>
         /// <param name="identityService">The identity service for user authentication and registration.</param>
-        public AuthController(IIdentityService identityService)
+        /// <param name="registerValidator">The validator for registration requests.</param>
+        /// <param name="loginValidator">The validator for login requests.</param>
+        public AuthController(
+            IIdentityService identityService,
+            IValidator<RegisterRequest> registerValidator,
+            IValidator<LoginRequest> loginValidator)
         {
             _identityService = identityService;
+            _registerValidator = registerValidator;
+            _loginValidator = loginValidator;
         }
 
         /// <summary>
@@ -30,13 +40,24 @@ namespace MyFinanceTracker.Api.Controllers
         /// <returns>An HTTP response indicating the result of the registration.</returns>
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [SwaggerOperation(
             Summary = "Registers a new user.",
             Description = "Creates a new user account with the provided registration details."
         )]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest? request)
         {
+            if (request is null)
+            {
+                return BadRequest("Request body is required.");
+            }
+
+            var validationResult = await _registerValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
+            }
+
             var result = await _identityService.RegisterAsync(request);
 
             if (!result.IsSuccess)
@@ -53,15 +74,26 @@ namespace MyFinanceTracker.Api.Controllers
         /// <param name="request">The login request containing user credentials.</param>
         /// <returns>An HTTP response containing the authentication token.</returns>
         [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerOperation(
             Summary = "Authenticates a user.",
-            Description = "Validates the user's credentials and returns an authentication token if successful."
+            Description = "Validates the user's credentials and returns a JWT bearer token if successful."
         )]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest? request)
         {
+            if (request is null)
+            {
+                return BadRequest("Request body is required.");
+            }
+
+            var validationResult = await _loginValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
+            }
+
             var result = await _identityService.LoginAsync(request);
 
             if (!result.IsSuccess)
