@@ -8,8 +8,14 @@ using MyFinanceTracker.Infrastructure.Common.Extensions;
 using MyFinanceTracker.Infrastructure.Options;
 using FluentValidation;
 using MyFinanceTracker.Application.Common.Interfaces;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration.ReadFrom.Configuration(context.Configuration);
+});
 
 // Register validators from the Application assembly
 builder.Services.AddValidatorsFromAssemblyContaining<IIdentityService>(includeInternalTypes: true);
@@ -68,9 +74,22 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseSerilogRequestLogging();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-await app.RunAsync();
+try
+{
+    await app.RunAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    await Log.CloseAndFlushAsync();
+}
