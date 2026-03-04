@@ -1,4 +1,4 @@
-﻿using MyFinanceTracker.Api.Common.DTOs;
+using MyFinanceTracker.Api.Common.DTOs;
 using System.Net;
 using System.Text.Json;
 
@@ -28,7 +28,11 @@ namespace MyFinanceTracker.Api.Common.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred.");
+                _logger.LogError(ex,
+                    "Unhandled exception for {Method} {Path} | TraceId: {TraceId}",
+                    context.Request.Method,
+                    context.Request.Path,
+                    context.TraceIdentifier);
 
                 await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
             }

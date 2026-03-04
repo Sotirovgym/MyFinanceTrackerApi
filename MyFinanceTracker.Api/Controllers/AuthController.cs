@@ -16,6 +16,7 @@ namespace MyFinanceTracker.Api.Controllers
         private readonly IIdentityService _identityService;
         private readonly IValidator<RegisterRequest> _registerValidator;
         private readonly IValidator<LoginRequest> _loginValidator;
+        private readonly ILogger<AuthController> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
@@ -23,14 +24,17 @@ namespace MyFinanceTracker.Api.Controllers
         /// <param name="identityService">The identity service for user authentication and registration.</param>
         /// <param name="registerValidator">The validator for registration requests.</param>
         /// <param name="loginValidator">The validator for login requests.</param>
+        /// <param name="logger">The logger for the controller.</param>
         public AuthController(
             IIdentityService identityService,
             IValidator<RegisterRequest> registerValidator,
-            IValidator<LoginRequest> loginValidator)
+            IValidator<LoginRequest> loginValidator,
+            ILogger<AuthController> logger)
         {
             _identityService = identityService;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
+            _logger = logger;
         }
 
         /// <summary>
@@ -49,12 +53,14 @@ namespace MyFinanceTracker.Api.Controllers
         {
             if (request is null)
             {
+                _logger.LogWarning("Register called with null request body");
                 return BadRequest("Request body is required.");
             }
 
             var validationResult = await _registerValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
+                _logger.LogWarning("Registration validation failed for {Email}", request.Email);
                 return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
             }
 
@@ -62,9 +68,11 @@ namespace MyFinanceTracker.Api.Controllers
 
             if (!result.IsSuccess)
             {
+                _logger.LogWarning("Registration failed for {Email}: {Error}", request.Email, result.Error);
                 return BadRequest(result.Error);
             }
 
+            _logger.LogInformation("User registered successfully: {Email}", request.Email);
             return Ok(result.Data);
         }
 
@@ -85,12 +93,14 @@ namespace MyFinanceTracker.Api.Controllers
         {
             if (request is null)
             {
+                _logger.LogWarning("Login called with null request body");
                 return BadRequest("Request body is required.");
             }
 
             var validationResult = await _loginValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
+                _logger.LogWarning("Login validation failed for {Email}", request.Email);
                 return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
             }
 
@@ -98,9 +108,11 @@ namespace MyFinanceTracker.Api.Controllers
 
             if (!result.IsSuccess)
             {
+                _logger.LogWarning("Login failed for {Email}: invalid credentials", request.Email);
                 return Unauthorized(result.Error);
             }
 
+            _logger.LogInformation("User logged in successfully: {Email}", request.Email);
             return Ok(result.Data);
         }
     }
