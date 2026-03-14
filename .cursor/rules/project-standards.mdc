@@ -1,0 +1,51 @@
+---
+description: MyFinanceTracker coding standards — Clean Architecture, Result/Options patterns, SOLID, logging, C# style
+alwaysApply: true
+---
+
+# MyFinanceTracker Project Standards
+
+## Architecture
+
+- **Clean Architecture**: Api → Application → Core; Infrastructure implements Application interfaces and references Core. No dependencies from inner layers to outer (Application/Core do not reference Api or Infrastructure).
+- **Feature-based organization**: Group by feature (e.g. `Features/Accounts`, `Features/Categories`, `Features/Transactions`). Each feature folder contains its DTOs, validators, and the application service implementation (e.g. `Features/Accounts/AccountService.cs`). Service and repository interfaces stay in `Application.Common.Interfaces`.
+- **Common folder**: Use for shared, cross-cutting concerns (used by multiple features or the whole application). Put under `Application.Common`: **Interfaces**, **DTOs** (e.g. `Result`), **Options** (e.g. `JwtSettings` in `Common.Options`). Do **not** put feature-specific types in Common—keep those in the feature folder (e.g. `Features/Accounts/DTOs`).
+- **Repository pattern**: Data access is behind repository interfaces. **Application** defines repository interfaces (e.g. `IAccountRepository`) and **application services** (e.g. `AccountService`) that contain use-case logic and depend on these interfaces. **Infrastructure** implements repositories (e.g. `AccountRepository`) using `ApplicationDbContext`/EF Core. Domain entities (e.g. `Account`, `Category`, `Transaction`) live in **Core** and are used by both Application and Infrastructure.
+- **List/filter queries**: For list endpoints with optional filters (e.g. GET /api/Transactions?accountId=...&from=...&to=...), use a **filter DTO** in a feature-level **Filters** folder (e.g. `Features/Transactions/Filters/TransactionFilterRequest.cs`). Validate it with FluentValidation (e.g. `From` ≤ `To`). Keep **query-building logic** (how the filter translates to `IQueryable`) in a separate class in **Infrastructure** (e.g. `Infrastructure.Data.Filters.TransactionQueryFilter` with an `Apply(IQueryable<T>, userId, filter)` method). The repository then calls the filter’s `Apply` and adds ordering/execution; this keeps the repository thin and makes adding filter criteria a single-place change.
+- **Unit of Work**: Use `IUnitOfWork` (Application) implemented in Infrastructure so that multiple repository operations in one use case commit in a single transaction. Repositories do not call `SaveChangesAsync`; application services call `await _unitOfWork.SaveChangesAsync(cancellationToken)` after their repository calls.
+
+## Patterns
+
+- **Result pattern**: Use `Result` / `Result<T>` from `Application.Common.DTOs` for operations that can fail. Return `Result.Success()` or `Result<T>.Success(data)` on success, `Result.Failure("message")` or `Result<T>.Failure("message")` on failure. Controllers map `!result.IsSuccess` to appropriate HTTP status (e.g. 404, 400).
+- **Options pattern**: Configuration classes (e.g. `JwtSettings`) use `IOptions<T>` or `IOptionsSnapshot<T>`, are bound from config, and registered via `Configure<T>(configuration.GetSection(...))`. Keep section names and validation in one place.
+
+## SOLID and dependency injection
+
+- Prefer **constructor injection** for dependencies used in multiple actions or across the controller (e.g. services, `ICurrentUserService`, `ILogger<T>`).
+- Use **method injection** (`[FromServices]`) for dependencies used in only one action (e.g. `IValidator<CreateAccountRequest>` in the Create action). This keeps the constructor small and makes it clear which action needs which dependency.
+- **Single responsibility**: One clear purpose per class (e.g. controllers delegate to services; services handle one aggregate or use case).
+- **Depend on abstractions**: Application defines service and repository interfaces; Application implements application services (e.g. `AccountService`); Infrastructure implements repositories and `IUnitOfWork`; Api implements HTTP-specific services (e.g. `ICurrentUserService`).
+
+## Logging
+
+- Use **structured logging** with named placeholders (e.g. `_logger.LogInformation("Account created. UserId: {UserId}, AccountId: {AccountId}", userId, id)`). No string interpolation in log messages.
+- Log **warnings** for validation failures, not-found, and business rule failures; **information** for successful create/update/delete; **error** for unhandled exceptions (e.g. in middleware).
+- Inject `ILogger<T>` in controllers and services that need to log.
+
+## C# Style
+
+- **Always use braces for `if` / `else` / `else if`**, even for single-line bodies.
+
+```csharp
+// ✅ GOOD
+if (!result.IsSuccess)
+{
+    return NotFound(result.Error);
+}
+
+// ❌ BAD
+if (!result.IsSuccess)
+    return NotFound(result.Error);
+```
+
+- Use `string.Empty` instead of `""` for empty strings. Prefer `is null` / `is not null` over `== null`.

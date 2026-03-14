@@ -14,26 +14,11 @@ namespace MyFinanceTracker.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IIdentityService _identityService;
-        private readonly IValidator<RegisterRequest> _registerValidator;
-        private readonly IValidator<LoginRequest> _loginValidator;
         private readonly ILogger<AuthController> _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AuthController"/> class.
-        /// </summary>
-        /// <param name="identityService">The identity service for user authentication and registration.</param>
-        /// <param name="registerValidator">The validator for registration requests.</param>
-        /// <param name="loginValidator">The validator for login requests.</param>
-        /// <param name="logger">The logger for the controller.</param>
-        public AuthController(
-            IIdentityService identityService,
-            IValidator<RegisterRequest> registerValidator,
-            IValidator<LoginRequest> loginValidator,
-            ILogger<AuthController> logger)
+        public AuthController(IIdentityService identityService, ILogger<AuthController> logger)
         {
             _identityService = identityService;
-            _registerValidator = registerValidator;
-            _loginValidator = loginValidator;
             _logger = logger;
         }
 
@@ -41,6 +26,7 @@ namespace MyFinanceTracker.Api.Controllers
         /// Registers a new user.
         /// </summary>
         /// <param name="request">The registration request containing user details.</param>
+        /// <param name="registerValidator">Validator for the registration request (injected).</param>
         /// <returns>An HTTP response indicating the result of the registration.</returns>
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -49,7 +35,9 @@ namespace MyFinanceTracker.Api.Controllers
             Summary = "Registers a new user.",
             Description = "Creates a new user account with the provided registration details."
         )]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest? request)
+        public async Task<IActionResult> Register(
+            [FromBody] RegisterRequest? request,
+            [FromServices] IValidator<RegisterRequest> registerValidator)
         {
             if (request is null)
             {
@@ -57,7 +45,7 @@ namespace MyFinanceTracker.Api.Controllers
                 return BadRequest("Request body is required.");
             }
 
-            var validationResult = await _registerValidator.ValidateAsync(request);
+            var validationResult = await registerValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
                 _logger.LogWarning("Registration validation failed for {Email}", request.Email);
@@ -80,6 +68,7 @@ namespace MyFinanceTracker.Api.Controllers
         /// Authenticates a user and returns a token.
         /// </summary>
         /// <param name="request">The login request containing user credentials.</param>
+        /// <param name="loginValidator">Validator for the login request (injected).</param>
         /// <returns>An HTTP response containing the authentication token.</returns>
         [HttpPost("login")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
@@ -89,7 +78,9 @@ namespace MyFinanceTracker.Api.Controllers
             Summary = "Authenticates a user.",
             Description = "Validates the user's credentials and returns a JWT bearer token if successful."
         )]
-        public async Task<IActionResult> Login([FromBody] LoginRequest? request)
+        public async Task<IActionResult> Login(
+            [FromBody] LoginRequest? request,
+            [FromServices] IValidator<LoginRequest> loginValidator)
         {
             if (request is null)
             {
@@ -97,7 +88,7 @@ namespace MyFinanceTracker.Api.Controllers
                 return BadRequest("Request body is required.");
             }
 
-            var validationResult = await _loginValidator.ValidateAsync(request);
+            var validationResult = await loginValidator.ValidateAsync(request);
             if (!validationResult.IsValid)
             {
                 _logger.LogWarning("Login validation failed for {Email}", request.Email);
