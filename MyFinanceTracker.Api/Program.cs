@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MyFinanceTracker.Api.Common.Extensions;
 using MyFinanceTracker.Api.Common.Middlewares;
+using MyFinanceTracker.Api.Common.Options;
 using MyFinanceTracker.Application;
 using MyFinanceTracker.Infrastructure;
 using MyFinanceTracker.Infrastructure.Common.Extensions;
@@ -26,6 +27,19 @@ builder.Services.AddValidatorsFromAssemblyContaining<IIdentityService>(includeIn
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddControllers();
+
+var corsSettings = builder.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()
+    ?? new CorsSettings();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(corsSettings.AllowedOrigins is { Length: > 0 } ? corsSettings.AllowedOrigins : new[] { "http://localhost:3000" })
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
@@ -78,6 +92,8 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseCors();
 
 app.UseSerilogRequestLogging();
 

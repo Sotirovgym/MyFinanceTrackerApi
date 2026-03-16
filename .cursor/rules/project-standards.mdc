@@ -17,7 +17,7 @@ alwaysApply: true
 ## Patterns
 
 - **Result pattern**: Use `Result` / `Result<T>` from `Application.Common.DTOs` for operations that can fail. Return `Result.Success()` or `Result<T>.Success(data)` on success, `Result.Failure("message")` or `Result<T>.Failure("message")` on failure. Controllers map `!result.IsSuccess` to appropriate HTTP status (e.g. 404, 400).
-- **Options pattern**: Configuration classes (e.g. `JwtSettings`) use `IOptions<T>` or `IOptionsSnapshot<T>`, are bound from config, and registered via `Configure<T>(configuration.GetSection(...))`. Keep section names and validation in one place.
+- **Options pattern**: Use a **strongly-typed settings class** (e.g. `JwtSettings`, `CorsSettings`) with a `SectionName` constant, bound from config. **When you need the value only at startup** (e.g. in `Program.cs` for `AddCors`, `AddAuthentication`), bind once with `configuration.GetSection(Settings.SectionName).Get<TSettings>()` and use the instance. **When a service needs config at runtime** (e.g. a controller, middleware, or app service), register with `Configure<TSettings>(configuration.GetSection(...))` and inject `IOptions<TSettings>` (or `IOptionsSnapshot<TSettings>` for reload). Keep section names and validation in one place.
 
 ## SOLID and dependency injection
 
