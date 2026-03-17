@@ -8,7 +8,7 @@ using MyFinanceTracker.Application.Common.DTOs;
 using MyFinanceTracker.Application.Common.Interfaces;
 using MyFinanceTracker.Application.Features.Authentication.DTOs;
 using MyFinanceTracker.Core.Constants;
-using MyFinanceTracker.Infrastructure.Options;
+using MyFinanceTracker.Application.Common.Options;
 
 namespace MyFinanceTracker.Infrastructure.Identity
 {

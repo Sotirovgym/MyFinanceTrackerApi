@@ -13,6 +13,6 @@
         /// <summary>
         /// Additional details about the error
         /// </summary>
-        public string?Details { get; init; }
+        public string? Details { get; init; }
     }
 }

@@ -3,9 +3,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MyFinanceTracker.Application.Common.Interfaces;
 using MyFinanceTracker.Infrastructure.Data;
+using MyFinanceTracker.Infrastructure.Data.Filters;
+using MyFinanceTracker.Infrastructure.Data.Repositories;
 using MyFinanceTracker.Infrastructure.Identity;
 using MyFinanceTracker.Infrastructure.Common.Extensions;
-using MyFinanceTracker.Infrastructure.Options;
+using MyFinanceTracker.Application.Common.Options;
 
 namespace MyFinanceTracker.Infrastructure
 {
@@ -15,13 +17,17 @@ namespace MyFinanceTracker.Infrastructure
         {
             services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
 
-            // Register ApplicationDbContext with PostgreSQL
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity();
 
             services.AddScoped<IIdentityService, IdentityService>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<TransactionQueryFilter>();
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
 
             return services;
         }

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MyFinanceTracker.Infrastructure.Migrations
+namespace MyFinanceTracker.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration

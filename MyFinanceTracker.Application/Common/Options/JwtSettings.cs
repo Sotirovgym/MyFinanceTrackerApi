@@ -1,4 +1,4 @@
-namespace MyFinanceTracker.Infrastructure.Options
+namespace MyFinanceTracker.Application.Common.Options
 {
     /// <summary>
     /// Configuration options for JWT token generation and validation.
