@@ -1,6 +1,183 @@
-@MyFinanceTracker.Api_HostAddress = http://localhost:5010
+# MyFinanceTracker API — run requests from VS / VS Code (REST Client) / Rider.
+# Base URL must match launchSettings (http profile uses port 5010).
+# After Login, copy AccessToken into @token for protected routes.
+# Enums are sent as numbers (default System.Text.Json): AccountType 0=Checking,1=Savings,2=CreditCard,3=Cash | CurrencyCode 0=USD,1=EUR | TransactionType 0=Income,1=Expense
 
-GET {{MyFinanceTracker.Api_HostAddress}}/weatherforecast/
+@MyFinanceTracker.Api_HostAddress = http://localhost:5010
+@token = YOUR_JWT_AFTER_LOGIN
+
+### Auth — Register (no JWT)
+POST {{MyFinanceTracker.Api_HostAddress}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "YourPassword1!",
+  "confirmPassword": "YourPassword1!",
+  "enableNotifications": false
+}
+
+###
+
+### Auth — Login (no JWT) — paste accessToken into @token above for requests below
+POST {{MyFinanceTracker.Api_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "YourPassword1!"
+}
+
+###
+
+### Accounts — list (optional: ?includeInactive=true)
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Accounts
 Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Accounts — get by id (replace GUID)
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Accounts/00000000-0000-0000-0000-000000000001
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Accounts — create
+POST {{MyFinanceTracker.Api_HostAddress}}/api/Accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Main checking",
+  "accountType": 0,
+  "currency": 0,
+  "initialBalance": 1000
+}
+
+###
+
+### Accounts — update (replace GUID)
+PUT {{MyFinanceTracker.Api_HostAddress}}/api/Accounts/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Main checking",
+  "accountType": 0,
+  "currency": 0,
+  "isActive": true
+}
+
+###
+
+### Accounts — delete (replace GUID)
+DELETE {{MyFinanceTracker.Api_HostAddress}}/api/Accounts/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{token}}
+
+###
+
+### Categories — list (optional: ?includeInactive=true)
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Categories
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Categories — get by id (replace GUID)
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Categories/00000000-0000-0000-0000-000000000001
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Categories — create (transactionType: 0=Income, 1=Expense)
+POST {{MyFinanceTracker.Api_HostAddress}}/api/Categories
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Groceries",
+  "type": 1
+}
+
+###
+
+### Categories — update (replace GUID)
+PUT {{MyFinanceTracker.Api_HostAddress}}/api/Categories/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Groceries",
+  "type": 1,
+  "isActive": true
+}
+
+###
+
+### Categories — delete (replace GUID)
+DELETE {{MyFinanceTracker.Api_HostAddress}}/api/Categories/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{token}}
+
+###
+
+### Transactions — list (all query params optional: accountId, categoryId, from, to — ISO 8601 dates)
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Transactions
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Transactions — list with filters
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Transactions?accountId=00000000-0000-0000-0000-000000000001&categoryId=00000000-0000-0000-0000-000000000002&from=2025-01-01T00:00:00Z&to=2025-12-31T23:59:59Z
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Transactions — get by id (replace GUID)
+GET {{MyFinanceTracker.Api_HostAddress}}/api/Transactions/00000000-0000-0000-0000-000000000001
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### Transactions — create (replace accountId/categoryId with real GUIDs from Accounts/Categories)
+POST {{MyFinanceTracker.Api_HostAddress}}/api/Transactions
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "accountId": "00000000-0000-0000-0000-000000000001",
+  "categoryId": "00000000-0000-0000-0000-000000000002",
+  "type": 1,
+  "amount": 42.50,
+  "transactionDate": "2025-02-16T12:00:00Z",
+  "description": "Coffee"
+}
+
+###
+
+### Transactions — update (replace GUIDs)
+PUT {{MyFinanceTracker.Api_HostAddress}}/api/Transactions/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "accountId": "00000000-0000-0000-0000-000000000001",
+  "categoryId": "00000000-0000-0000-0000-000000000002",
+  "type": 1,
+  "amount": 45.00,
+  "transactionDate": "2025-02-16T12:00:00Z",
+  "description": "Coffee + pastry"
+}
+
+###
+
+### Transactions — delete (replace GUID)
+DELETE {{MyFinanceTracker.Api_HostAddress}}/api/Transactions/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{token}}
 
 ###
