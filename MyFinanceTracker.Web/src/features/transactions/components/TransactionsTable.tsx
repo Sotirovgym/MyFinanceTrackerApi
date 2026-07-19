@@ -13,6 +13,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -27,6 +28,12 @@ import { cn } from '@/lib/utils';
 import type { Account } from '@/features/accounts/types';
 import type { Category } from '@/features/categories/types';
 import type { Transaction } from '../types';
+
+type CurrencyTotals = {
+  income: number;
+  expense: number;
+  net: number;
+}
 
 type TransactionsTableProps = {
   transactions: Transaction[];
@@ -45,6 +52,31 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   const accountById = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
   const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
+
+  const totalsByCurrency = useMemo(() => {
+    const map = new Map<CurrencyCode, CurrencyTotals>();
+
+    for (const transaction of transactions) {
+      const account = accountById.get(transaction.accountId);
+      const currency = account?.currency ?? CurrencyCode.USD;
+
+      let totals = map.get(currency);
+      if (!totals){
+        totals = { income: 0, expense: 0, net: 0 };
+        map.set(currency, totals);
+      }
+
+      if (transaction.type === TransactionType.Income) {
+        totals.income += transaction.amount;
+        totals.net += transaction.amount;
+      } else {
+        totals.expense += transaction.amount;
+        totals.net -= transaction.amount;
+      }
+    }
+
+    return map;
+  }, [transactions, accountById]);
 
   return (
     <div className="border-border rounded-lg border">
@@ -119,6 +151,25 @@ export function TransactionsTable({
             );
           })}
         </TableBody>
+        <TableFooter>
+          {[...totalsByCurrency.entries()].map(([currency, totals]) => (
+        <TableRow key={currency}>
+          <TableCell colSpan={4} className="text-right font-semibold">
+            {totalsByCurrency.size > 1 ? `Total (${currency})` : 'Total'}
+          </TableCell>
+          <TableCell
+            className={cn(
+              'text-right font-semibold tabular-nums',
+              totals.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400',
+            )}
+          >
+            {totals.net >= 0 ? '+' : ''}
+            {formatMoney(Math.abs(totals.net), currency)}
+          </TableCell>
+          <TableCell />
+        </TableRow>
+      ))}
+    </TableFooter>
       </Table>
     </div>
   );
